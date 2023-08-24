@@ -89,7 +89,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 score_filter, topic_model_scale, query):
+                 score_filter, topic_model_scale, queries):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -110,7 +110,7 @@ class TestTreeBrowser():
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
-        self.query = query
+        self.queries = queries
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -366,20 +366,21 @@ class TestTreeBrowser():
                 # add a new empty test to the current topic
                 elif action == "add_new_test":
 
-                    # add the new test row
-                    row = {
-                        "topic": self.current_topic,
-                        "input": "New test", # The special value "New test" causes the interface to auto-select the text
-                        "output": "",
-                        "label": "",
-                        "labeler": "imputed",
-                        "description": "",
-                        "query": self.query
-                    }
-                    for c in self.score_columns:
-                        row[c] = np.nan
-                        row[c[:-6] + " raw outputs"] = "{}"
-                    self.test_tree.loc[uuid.uuid4().hex] = row
+                    for query in self.queries:
+                        # add the new test row
+                        row = {
+                            "topic": self.current_topic,
+                            "input": "New test", # The special value "New test" causes the interface to auto-select the text
+                            "output": "",
+                            "label": "",
+                            "labeler": "imputed",
+                            "description": "",
+                            "query": query
+                        }
+                        for c in self.score_columns:
+                            row[c] = np.nan
+                            row[c[:-6] + " raw outputs"] = "{}"
+                        self.test_tree.loc[uuid.uuid4().hex] = row
 
                     self._auto_save()
                     self._refresh_interface()
@@ -437,7 +438,6 @@ class TestTreeBrowser():
                     sendback_data[msg[k]["value"]] = template_value
 
                 # update the row and recompute scores
-                msg[k]["query"] = self.query
                 for k2 in msg[k]:
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
@@ -531,7 +531,7 @@ class TestTreeBrowser():
                         "labeler": test.labeler,
                         "description": test.description,
                         "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
-                        "editing": test.input == "New test"
+                        "editing": test.input == "New test",
                     }
 
                     data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}

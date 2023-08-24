@@ -34,7 +34,7 @@ class TestTree():
     webserver. A TestTree object also conforms to most of the standard pandas DataFrame API.
     """
 
-    def __init__(self, tests=None, labeling_model=TopicLabelingModel, membership_model=TopicMembershipModel, index=None, query='', compute_embeddings=False, ensure_topic_markers=True, cache_file=None, **kwargs):
+    def __init__(self, tests=None, labeling_model=TopicLabelingModel, membership_model=TopicMembershipModel, index=None, queries=[], compute_embeddings=False, ensure_topic_markers=True, cache_file=None, **kwargs):
         """ Create a new test tree.
 
         Parameters
@@ -59,7 +59,7 @@ class TestTree():
 
         self.labeling_model = labeling_model
         self.membership_model = membership_model
-        self.query = query
+        self.queries = queries
 
         # create a new test tree in memory
         if tests is None:
@@ -359,7 +359,7 @@ class TestTree():
             starting_path=starting_path,
             score_filter=score_filter,
             topic_model_scale=topic_model_scale,
-            query=self.query
+            queries=self.queries
         )
 
     def __repr__(self):
